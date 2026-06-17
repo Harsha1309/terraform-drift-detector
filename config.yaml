@@ -1,0 +1,14 @@
+# config.yaml
+scan_settings:
+  # Cron expression: run every 15 minutes
+  cron: "*/15 * * * *"
+  
+state_source:
+  type: "local"
+  path: "terraform/terraform.tfstate"
+
+cloud_target:
+  provider: "aws"
+  region: "us-east-1"
+  resource_types:
+    - "aws_s3_bucket"

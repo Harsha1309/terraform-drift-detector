@@ -1,0 +1,47 @@
+name: Infrastructure Drift Detection
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # Run daily at 8:00 AM UTC
+  workflow_dispatch:      # Allow manual triggering
+
+jobs:
+  detect-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Example: Configure AWS Credentials for the CloudFetcher
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Example: Pull remote state (if not using local state)
+      # - name: Fetch Terraform State from S3
+      #   run: aws s3 cp s3://my-terraform-states/prod.tfstate ./terraform.tfstate
+
+      - name: Run Drift Scan
+        run: |
+          python cli.py scan --format all
+
+      - name: Archive Drift Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-reports
+          path: |
+            drift_report.json
+            drift_dashboard.html
