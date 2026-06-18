@@ -24,6 +24,7 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy the application code
 COPY cli.py /app/
+COPY scheduler.py /app/
 COPY config.yaml /app/
 COPY core/ /app/core/
 COPY providers/ /app/providers/
