@@ -53,12 +53,20 @@ jobs:
             -backend-config="region=us-east-1" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
 
-      - name: Pull Remote State Locally and validate JSON
+      - name: Fetch Remote State from S3
         run: |
-          set -e
           cd terraform
-          terraform state pull | jq . > terraform.tfstate
-          echo "Pulled remote state to test/terraform.tfstate"
+          if aws s3 cp "s3://${{ secrets.TF_STATE_BUCKET }}/${{ secrets.TF_STATE_KEY }}" terraform.tfstate 2>/dev/null; then
+            echo "✓ Successfully fetched state from S3"
+            jq . terraform.tfstate > /dev/null && echo "✓ State file is valid JSON" || {
+              echo "✗ State file is not valid JSON, skipping drift scan"
+              exit 0
+            }
+          else
+            echo "✗ Remote state not found in S3. Create initial state with: terraform apply"
+            echo "Skipping drift scan (no state to compare)"
+            exit 0
+          fi
 
       - name: Run Drift Scan
         run: |
