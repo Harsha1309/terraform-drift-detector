@@ -52,6 +52,11 @@ jobs:
             -backend-config="region=us-east-1" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
 
+      - name: Pull Remote State Locally
+        run: |
+          cd terraform
+          terraform state pull > terraform.tfstate
+
       - name: Run Drift Scan
         run: |
           docker run --rm \
