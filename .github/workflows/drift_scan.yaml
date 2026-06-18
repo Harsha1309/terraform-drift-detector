@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/*
   schedule:
     - cron: '*/2 * * * *' 
   workflow_dispatch:      
@@ -52,10 +53,12 @@ jobs:
             -backend-config="region=us-east-1" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
 
-      - name: Pull Remote State Locally
+      - name: Pull Remote State Locally and validate JSON
         run: |
+          set -e
           cd terraform
-          terraform state pull > terraform.tfstate
+          terraform state pull | jq . > terraform.tfstate
+          echo "Pulled remote state to test/terraform.tfstate"
 
       - name: Run Drift Scan
         run: |
